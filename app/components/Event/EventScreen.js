@@ -6,7 +6,10 @@ import {
     FlatList, 
     AsyncStorage,
     BackHandler,
-    Image
+    Image,
+    TouchableOpacity,
+    Modal,
+    Dimensions
 } from 'react-native'
 import {
     SearchBar
@@ -16,6 +19,7 @@ import {
 } from 'native-base'
 import ListCardItemEvent from '../ListCardItem/ListCardItemEvent'
 import CONSTANTS from '../../constants/Constants'
+import AddEventModal from '../Modals/AddEventModal'
 
 export default class EventScreen extends Component {
 
@@ -29,7 +33,8 @@ export default class EventScreen extends Component {
             isLoading: false, 
             error: false, 
             errorMessage: '', 
-            data: []
+            data: [],
+            isModalVisible: false
         }
         this.arrayholder = []
         console.log(`\n\n------------------------------------------------------------------------EVENT SCREEN------------------------------------------------------------------------`)
@@ -37,6 +42,7 @@ export default class EventScreen extends Component {
         this.getEvents = this.getEvents.bind(this)
         this.renderHeader = this.renderHeader.bind(this)
         this.searchFilterFunction = this.searchFilterFunction.bind(this)
+        this.showModal = this.showModal.bind(this)
     }
 
     componentDidMount = () => {
@@ -56,6 +62,12 @@ export default class EventScreen extends Component {
         console.log(`\n\n------------------------------------------------------------------------HOME SCREEN------------------------------------------------------------------------`)
         this.props.navigation.navigate("HomeScreen")
         return true;
+    }
+
+    showModal = () => {
+        this.setState({
+            isModalVisible: true
+        })
     }
 
     getEvents = async() => {
@@ -114,15 +126,22 @@ export default class EventScreen extends Component {
     }
 
     renderHeader = () => {    
-        return (      
-            <SearchBar
-                round
-                lightTheme
-                searchIcon={{ size: 48 }}
-                placeholder='event name...'
-                onChangeText={text => this.searchFilterFunction(text)}
-            />
-        );  
+        return (
+            <View style={styles.header}>
+                <SearchBar
+                    containerStyle={styles.searchBar}
+                    inputStyle={styles.searchBarInputContainer}
+                    round
+                    lightTheme
+                    searchIcon={{ size: 50 }}
+                    placeholder='event name...'
+                    onChangeText={text => this.searchFilterFunction(text)}
+                />
+                <TouchableOpacity style={styles.addContainer} onPress={() => this.showModal()}>
+                    <Image source={require('../../assets/icons/add.png')} resizeMode="contain" style={styles.icon} />
+                </TouchableOpacity>
+            </View>
+        );
     };
 
     searchFilterFunction = text => {
@@ -155,6 +174,24 @@ export default class EventScreen extends Component {
 
         return (
             <View style={styles.container}>
+                <Modal
+                    animationType="slide"
+                    transparent={false}
+                    visible={this.state.isModalVisible}
+                    onRequestClose={() => {
+                        console.log(`render()-> <Modal />----> modal closed by user`)
+                    }}
+                >
+                    <View style={styles.addEventModal}>
+                        <TouchableOpacity onPress={() => {
+                            this.setState({
+                                isModalVisible: false
+                            })
+                        }}>
+                            <Text> cancel </Text>
+                        </TouchableOpacity>
+                    </View>
+                </Modal>
                 <FlatList 
                     data={this.state.data}
                     renderItem={({ item }) => {
@@ -171,6 +208,13 @@ export default class EventScreen extends Component {
 }
 
 const styles = StyleSheet.create({
+    addEventModal: {
+        height: "100%", 
+        width: "100%", 
+        alignItems: "center",
+        justifyContent: 'center',
+        backgroundColor: "#fff"
+    },
     container: {
         flex: 1,
     },
@@ -179,6 +223,34 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: "#fff"
+    },
+    searchBarInputContainer: {
+        height: "75%", 
+        width: "80%", 
+    },
+    header: {
+        width: "100%", 
+        height: 50,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: "#e1e8ee"
+    },
+    searchBar: {
+        width: "90%", 
+        height: 50, 
+        alignItems: "center", 
+        justifyContent: 'center',
+    },
+    addContainer: {
+        height: "100%",
+        width: "10%",
+        marginRight: 6,
+        backgroundColor: "#e1e8ee"
+    },
+    icon: {
+        height: "100%",
+        width: "100%"
     },
     gif: {
         height: "20%",
