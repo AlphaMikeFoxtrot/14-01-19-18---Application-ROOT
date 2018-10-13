@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 import {
     View, 
     Text, 
@@ -9,17 +9,22 @@ import {
     Image,
     TouchableOpacity,
     Modal,
-    Dimensions
-} from 'react-native'
+    TextInput,
+    Dimensions,
+    ScrollView,
+    KeyboardAvoidingView
+} from "react-native"
 import {
     SearchBar
-} from 'react-native-elements'
+} from "react-native-elements"
+import DatePicker from "react-native-datepicker"
+import DateTimePicker from "react-native-modal-datetime-picker";
 import {
     Spinner
-} from 'native-base'
-import ListCardItemEvent from '../ListCardItem/ListCardItemEvent'
-import CONSTANTS from '../../constants/Constants'
-import AddEventModal from '../Modals/AddEventModal'
+} from "native-base"
+import ListCardItemEvent from "../ListCardItem/ListCardItemEvent"
+import CONSTANTS from "../../constants/Constants"
+import AddEventModal from "../Modals/AddEventModal"
 
 export default class EventScreen extends Component {
 
@@ -30,19 +35,37 @@ export default class EventScreen extends Component {
     constructor(props) {
         super(props)
         this.state = {
+            isTimePickerVisible: false,
+            isDatePickerVisible: false, 
+            datePicked: false,
+            date: "",
             isLoading: false, 
             error: false, 
-            errorMessage: '', 
+            errorMessage: "", 
             data: [],
-            isModalVisible: false
+            isModalVisible: false,
+            time: "", 
+            timePicked: false,
+            title: '', 
+            description: '', 
+            location: '', 
         }
         this.arrayholder = []
         console.log(`\n\n------------------------------------------------------------------------EVENT SCREEN------------------------------------------------------------------------`)
+        // console.log(`constructor()---->(dimensions absolute value)----> \n\t\t8%: ${Dimensions.get("window").height * 0.08}\t25%: ${Dimensions.get("window").height * 0.25}\t35%: ${Dimensions.get("window").height * 0.35}`)
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this)
         this.getEvents = this.getEvents.bind(this)
         this.renderHeader = this.renderHeader.bind(this)
         this.searchFilterFunction = this.searchFilterFunction.bind(this)
         this.showModal = this.showModal.bind(this)
+        this._showTimePicker = this._showTimePicker.bind(this)
+        this._handleTimePicked = this._handleTimePicked.bind(this)
+        this._hideTimePicker = this._hideTimePicker.bind(this)
+        this._showDatePicker = this._showDatePicker.bind(this)
+        this._handleDatePicked = this._handleDatePicked.bind(this)
+        this._hideDatePicker = this._hideDatePicker.bind(this)
+        this.tConvert = this.tConvert.bind(this)
+        this.sumbit = this.sumbit.bind(this)
     }
 
     componentDidMount = () => {
@@ -134,11 +157,11 @@ export default class EventScreen extends Component {
                     round
                     lightTheme
                     searchIcon={{ size: 50 }}
-                    placeholder='event name...'
+                    placeholder="event name..."
                     onChangeText={text => this.searchFilterFunction(text)}
                 />
                 <TouchableOpacity style={styles.addContainer} onPress={() => this.showModal()}>
-                    <Image source={require('../../assets/icons/add.png')} resizeMode="contain" style={styles.icon} />
+                    <Image source={require("../../assets/icons/add.png")} resizeMode="contain" style={styles.icon} />
                 </TouchableOpacity>
             </View>
         );
@@ -153,6 +176,56 @@ export default class EventScreen extends Component {
 
         this.setState({ data: newData });
     };
+
+    _showTimePicker = () => this.setState({
+        isTimePickerVisible: true
+    });
+
+    _hideTimePicker = () => this.setState({
+        isTimePickerVisible: false
+    });
+
+    _handleTimePicked = (date) => {
+        // console.log("A time has been picked: ", `${date.toString().split(" ")[4].split(":")[0]}:${date.toString().split(" ")[4].split(":")[1]}`);
+        this.setState({
+            timePicked: true,
+            time: this.tConvert(`${date.toString().split(" ")[4].split(":")[0]}:${date.toString().split(" ")[4].split(":")[1]}`)
+        })
+        this._hideTimePicker();
+    };
+
+    _showDatePicker = () => this.setState({
+        isDatePickerVisible: true
+    });
+
+    _hideDatePicker = () => this.setState({
+        isDatePickerVisible: false
+    });
+
+    _handleDatePicked = (date) => {
+        console.log(`_handleDatePicked()----> picked date: ${date.toString()}`)
+        this.setState({
+            datePicked: true,
+            date: `${date.toString().split(" ")[0]} ${date.toString().split(" ")[1]} ${date.toString().split(" ")[2]} ${date.toString().split(" ")[3]}`
+        })
+        this._hideDatePicker();
+    };
+
+    sumbit() {
+        console.log(`submit():\n\t${this.state.title}\n\t${this.state.description}\n\t${this.state.location}\n\t${this.state.date} at ${this.state.time}`)
+    }
+
+    tConvert(time) {
+        // Check correct time format and split into components
+        time = time.toString().match(/^([01]\d|2[0-3])(:)([0-5]\d)(:[0-5]\d)?$/) || [time];
+
+        if (time.length > 1) { // If time format correct
+            time = time.slice(1);  // Remove full string match value
+            time[5] = +time[0] < 12 ? " am" : " pm"; // Set AM/PM
+            time[0] = +time[0] % 12 || 12; // Adjust hours
+        }
+        return time.join(""); // return adjusted time or original string
+    }
 
     render() {
 
@@ -180,17 +253,145 @@ export default class EventScreen extends Component {
                     visible={this.state.isModalVisible}
                     onRequestClose={() => {
                         console.log(`render()-> <Modal />----> modal closed by user`)
-                    }}
-                >
-                    <View style={styles.addEventModal}>
-                        <TouchableOpacity onPress={() => {
-                            this.setState({
-                                isModalVisible: false
-                            })
-                        }}>
-                            <Text> cancel </Text>
-                        </TouchableOpacity>
-                    </View>
+                }}>
+                    <KeyboardAvoidingView style={styles.addEventModal} behavior="padding" style={styles.addEventModal}>
+                            <View>
+                                <View style={styles.modalSmallTitle}>
+                                    <View style={styles.modalHeading}>
+                                        <Text style={styles.modalTitleText}>Add new event</Text>
+                                    </View>
+                                    <View style={styles.modalHeaderCancelContainer}>
+                                        <TouchableOpacity onPress={() => this.setState({ isModalVisible: false })}>
+                                            <Image source={require("../../assets/icons/cancel.png")} resizeMode="contain" style={styles.modalIcon} />
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                                <View style={styles.hr} />
+                                <View style={styles.modalSmall}>
+                                    <TextInput onChangeText={(text) => {
+                                        this.setState({
+                                            title: text
+                                        })
+                                    }} placeholder="Event title...." style={styles.modalTextInput} />
+                                </View>
+                                <View style={styles.modalLarge}>
+                                    <TextInput onChangeText={(text) => {
+                                        this.setState({
+                                            description: text
+                                        })
+                                    }} placeholder="Event description...." multiline={true} style={styles.modalTextInputLarge} />
+                                </View>
+                                <View style={styles.modalSmall}>
+                                    <Image
+                                        source={require("../../assets/icons/location.png")}
+                                        style={{
+                                            height: "90%",
+                                            width: "10%",
+                                        }}
+                                        resizeMode="contain"
+                                    />
+                                    <TextInput
+                                        style={{
+                                            width: "85%",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            padding: 12,
+                                            borderColor: "#9e9e9e",
+                                            borderWidth: 1,
+                                            margin: 8,
+                                        }}
+                                        placeholder="Event Venue"
+                                    />
+                                </View>
+                                <View style={styles.modalSmall}>
+                                    <DateTimePicker
+                                        isVisible={this.state.isDatePickerVisible}
+                                        onConfirm={this._handleDatePicked}
+                                        onCancel={this._hideDatePicker}
+                                        mode="date"
+                                    />
+                                    <Image
+                                        source={require("../../assets/icons/date.png")}
+                                        style={{
+                                            height: "90%",
+                                            width: "10%",
+                                        }}
+                                        resizeMode="contain"
+                                    />
+                                    <TouchableOpacity
+                                        onPress={() => this._showDatePicker()}
+                                        style={{
+                                            width: "85%",
+                                            alignItems: "flex-start",
+                                            justifyContent: "center",
+                                            padding: 12,
+                                            borderColor: "#9e9e9e",
+                                            borderWidth: 1,
+                                            margin: 8,
+                                        }}
+                                    >
+                                        {this.state.datePicked ? <Text>{this.state.date}</Text> : <Text style={styles.hint}>Event date</Text>}
+                                    </TouchableOpacity>
+                                </View>
+                                <View style={styles.modalSmall}>
+                                    <DateTimePicker
+                                        isVisible={this.state.isTimePickerVisible}
+                                        onConfirm={this._handleTimePicked}
+                                        onCancel={this._hideTimePicker}
+                                        mode="time"
+                                        is24Hour={false}
+                                    />
+                                    <Image
+                                        source={require("../../assets/icons/time.png")}
+                                        style={{
+                                            height: "90%",
+                                            width: "10%",
+                                        }}
+                                        resizeMode="contain"
+                                    />
+                                    <TouchableOpacity
+                                        onPress={() => this._showTimePicker()}
+                                        style={{
+                                            width: "85%",
+                                            alignItems: "flex-start",
+                                            justifyContent: "center",
+                                            padding: 12,
+                                            borderColor: "#9e9e9e",
+                                            borderWidth: 1,
+                                            margin: 8,
+                                        }}
+                                    >
+                                        {this.state.timePicked ? <Text>{this.state.time}</Text> : <Text style={styles.hint}>Event time</Text>}
+                                    </TouchableOpacity>
+                                </View>
+                                <View style={{
+                                    flexDirection: "row",
+                                    height: 56,
+                                    marginTop: 32,
+                                    width: "100%",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    backgroundColor: "#fff", 
+                                }}>
+                                    <TouchableOpacity 
+                                        style={{
+                                            width: "96%", 
+                                            height: "64%",
+                                            backgroundColor: "#228B22",
+                                            borderRadius: 5,
+                                            alignItems: "center", 
+                                            justifyContent: "center"
+                                        }}
+                                        onPress={() => this.sumbit()}
+                                    >
+                                        <Text style={{
+                                            color: "#ffffff",
+                                            fontSize: 18,
+                                        }}>Submit</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </KeyboardAvoidingView>
                 </Modal>
                 <FlatList 
                     data={this.state.data}
@@ -211,8 +412,9 @@ const styles = StyleSheet.create({
     addEventModal: {
         height: "100%", 
         width: "100%", 
-        alignItems: "center",
-        justifyContent: 'center',
+        paddingRight: 12, 
+        paddingLeft: 12,
+        paddingTop: 6,
         backgroundColor: "#fff"
     },
     container: {
@@ -220,8 +422,8 @@ const styles = StyleSheet.create({
     },
     generalContainer: {
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: "center",
+        justifyContent: "center",
         backgroundColor: "#fff"
     },
     searchBarInputContainer: {
@@ -231,16 +433,16 @@ const styles = StyleSheet.create({
     header: {
         width: "100%", 
         height: 50,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
         backgroundColor: "#e1e8ee"
     },
     searchBar: {
         width: "90%", 
         height: 50, 
         alignItems: "center", 
-        justifyContent: 'center',
+        justifyContent: "center",
     },
     addContainer: {
         height: "100%",
@@ -255,5 +457,108 @@ const styles = StyleSheet.create({
     gif: {
         height: "20%",
         width: "20%"
+    },
+    modalSmall: {
+        flexDirection: "row",
+        height: 56, 
+        width: "100%", 
+        alignItems: "center", 
+        justifyContent: "center",
+        backgroundColor: "#fff", 
+    },
+    modalSmallTitle: {
+        height: 56, 
+        width: "100%", 
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#fff", 
+    },
+    modalLarge: {
+        height: 200,
+        width: "100%",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#fff",
+    },
+    hr: {
+        backgroundColor: "#333333",
+        width: "100%",
+        alignSelf: "center",
+        height: 1.25,
+        marginBottom: 16,
+    },
+    modalTitle: {
+        height: 176,
+        width: "100%",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#fff",
+    },
+    modalTitleText: {
+        color: "#222", 
+        textAlign: "center", 
+        fontSize: 20,
+    },
+    modalTextInput: {
+        width: "100%",
+        padding: 12,
+        borderColor: "#9e9e9e",
+        borderWidth: 1,
+        // borderRadius: 2.5,
+        margin: 8,
+    },
+    modalTextInputButton: {
+        width: "90%",
+        height: "80%",
+        borderColor: "#9e9e9e",
+        borderWidth: 1,
+        // borderRadius: 2.5,
+        margin: 8,
+    },
+    modalTextInputLarge: {
+        width: "100%",
+        height: 200,
+        textAlignVertical: "top",
+        margin: 8,
+        padding: 12,
+        borderColor: "#9e9e9e",
+        borderWidth: 0.8,
+        // borderRadius: 2.5,
+    },
+    modalHeader: {
+        height: 48, 
+        width: "100%", 
+        marginBottom: 14,
+        alignItems: "flex-end", 
+        justifyContent: "flex-start",
+        backgroundColor: "#fff", 
+    },
+    modalIcon: {
+        height: 28, 
+        width: 28
+    },
+    modalTitleIcon: {
+        height: "100%",
+        width: "15%", 
+        margin: 14
+    },
+    modalHeading: {
+        flexDirection: "row",
+        width: "85%", 
+        alignItems: "center",
+        height: "100%"
+    },
+    modalHeaderCancelContainer: {
+        width: "14%",
+        alignItems: "flex-end",
+        justifyContent: "center",
+        height: "100%"
+    },
+    hint: {
+        color: "#bdbdbd", 
+    },
+    textInputIcon: {
+        height: 30, 
+        width: "9%"
     }
 })
