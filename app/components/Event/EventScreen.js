@@ -49,6 +49,7 @@ export default class EventScreen extends Component {
             title: '', 
             description: '', 
             location: '', 
+            eventId: '',
         }
         this.arrayholder = []
         console.log(`\n\n------------------------------------------------------------------------EVENT SCREEN------------------------------------------------------------------------`)
@@ -66,6 +67,7 @@ export default class EventScreen extends Component {
         this._hideDatePicker = this._hideDatePicker.bind(this)
         this.tConvert = this.tConvert.bind(this)
         this.sumbit = this.sumbit.bind(this)
+        this.sendNotification = this.sendNotification.bind(this)
     }
 
     componentDidMount = () => {
@@ -211,8 +213,176 @@ export default class EventScreen extends Component {
         this._hideDatePicker();
     };
 
-    sumbit() {
+    sumbit = async() => {
         console.log(`submit():\n\t${this.state.title}\n\t${this.state.description}\n\t${this.state.location}\n\t${this.state.date} at ${this.state.time}`)
+        this.setState({
+            isModalVisible: false, 
+            isLoading: true
+        })
+        try {
+            console.log(`submit()----> getting user data from AsyncStorage....`)
+            let data = await AsyncStorage.getItem(CONSTANTS.ASYNC_STORAGE.USER);
+            data = JSON.parse(data);
+            console.log(`submit()----> data received from AsyncStorage: ${JSON.stringify(data)}`)
+            try {
+                const options = {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        Authorization: `Bearer ${data.authToken}`
+                    },
+                    body: JSON.stringify({
+                        branch_id: `${data.branchId}`,
+                        title: this.state.title, 
+                        body: this.state.description, 
+                        event_date: `${this.state.date} at ${this.state.time}`,
+                        location: this.state.location, 
+                    })
+                }
+                console.log(`submit()----> data sent to API: ${JSON.stringify(options)}`)
+                let response = await fetch(CONSTANTS.API.EVENTS, options)
+                let responseJson = await response.json()
+                if(JSON.stringify(responseJson).includes("error")) {
+                    console.log(`submit()----> error occured when getting data from API: ${error.toString()}`)
+                    this.setState({
+                        isLoading: false, 
+                        error: true, 
+                        errorMessage: JSON.stringify(responseJson)
+                    })
+                    return ;
+                }
+                console.log(`submit()----> response received from API: ${JSON.stringify(responseJson)}`)
+                this.setState({
+                    eventId: responseJson.event._id
+                })
+                this.sendNotification()
+            } catch (error) {
+                console.log(`submit()----> error occured when getting data from API: ${error.toString()}`)
+                this.setState({
+                    isLoading: false,
+                    error: true,
+                    errorMessage: JSON.stringify(error)
+                })
+                return;
+            }
+        } catch (error) {
+            console.log(`submit()----> error occured when getting data from AsyncStorage: ${error.toString()}`)
+            this.setState({
+                isLoading: false,
+                error: true,
+                errorMessage: JSON.stringify(error)
+            })
+            return;
+        }
+    }
+
+    sendNotification = async () => {
+        this.setState({
+            isLoading: true,
+        })
+        try {
+            console.log(`sendNotification()----> getting data from AsyncStorage...`)
+
+            let data = await AsyncStorage.getItem(CONSTANTS.ASYNC_STORAGE.USER)
+            data = JSON.parse(data)
+
+            try {
+
+                console.log(`sendNotification()----> getting user data from API....`)
+
+                const options = {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${data.authToken}`
+                    }
+                }
+                let response = await fetch(CONSTANTS.API.USER, options)
+                let responseJson = await response.json()
+
+                console.log(`data received from API: ${JSON.stringify(responseJson)}`)
+
+                responseJson = responseJson.users
+
+                var messages = []
+
+                responseJson.forEach(user => {
+                    messages.push({
+                        "to": user.notificationToken,
+                        "sound": "default",
+                        "title": this.state.title,
+                        "body": `${this.state.description}\n${this.state.date} at ${this.state.time}`,
+                        "priority": "high",
+                        "data": {
+                            eventId: this.state.event,
+                            type: "event",
+                            branchId: data.branchId
+                        }
+                    });
+                });
+
+                const expoOptions = {
+                    method: "POST",
+                    headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(messages)
+                }
+                try {
+
+                    console.log(`sendNotfication()----> sending notification to devices.....`)
+
+                    let notificationResponse = await fetch("https://exp.host/--/api/v2/push/send", expoOptions)
+                    let notificationResponseJson = await notificationResponse.json()
+
+                    console.log(`sendNotification()----> notification sent with response: ${JSON.stringify(notificationResponseJson)}`)
+
+                    this.setState({
+                        isLoading: false,
+                    })
+
+                    this.getEvents()
+
+                    return;
+
+                } catch (error) {
+
+                    console.log(`sendNotification()----> error occured when sending notifications to devices: ${error}`)
+
+                    this.setState({
+                        isLoading: false,
+                        error: true,
+                        errorMessage: error
+                    })
+
+                    return;
+                }
+
+            } catch (error) {
+
+                conosole.length(`sendNotification()----> error occured when getting users from API: ${error}`)
+
+                this.setState({
+                    isLoading: false,
+                    error: true,
+                    errorMessage: error.toString()
+                })
+
+                return;
+            }
+        } catch (error) {
+
+            console.log(`sendNotification()----> error occured when getting data from AsyncStorage: ${error}`)
+
+            this.setState({
+                isLoading: false,
+                error: true,
+                errorMessage: error
+            })
+
+            return;
+        }
     }
 
     tConvert(time) {
@@ -301,6 +471,11 @@ export default class EventScreen extends Component {
                                             margin: 8,
                                         }}
                                         placeholder="Event Venue"
+                                        onChangeText={(text) => {
+                                            this.setState({
+                                                location: text
+                                            })
+                                        }}
                                     />
                                 </View>
                                 <View style={styles.modalSmall}>
@@ -422,6 +597,7 @@ const styles = StyleSheet.create({
     },
     generalContainer: {
         flex: 1,
+        padding: 12, 
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "#fff"

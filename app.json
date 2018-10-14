@@ -8,7 +8,7 @@
     "platforms": ["ios", "android"],
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./app/assets/logo/logo_big.png",
     "splash": {
       "image": "./app/assets/logo/splash.png",
       "resizeMode": "cover",
@@ -29,6 +29,9 @@
     },
     "android": {
       "package": "com.smemetrics.nasr"
+    },
+    "notification": {
+      "icon": "./app/assets/logo/notification_icon.png"
     }
   }
 }
