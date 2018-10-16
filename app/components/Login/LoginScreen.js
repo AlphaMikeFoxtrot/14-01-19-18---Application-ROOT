@@ -10,6 +10,7 @@ import {
     ScrollView,
     AsyncStorage,
     BackHandler,
+    KeyboardAvoidingView
 } from "react-native"
 import {
     Spinner
@@ -273,91 +274,95 @@ export default class LoginScreen extends Component {
 
         if(this.state.authFail) {
             return (
-                <View style={styles.container}>
-                <View style={styles.topContainer}>
-                    <Image source={require("../../assets/logo/logo.png")} resizeMode="contain" style={styles.logo}/>
-                </View>
-                <View style={styles.centerContainer}>
-                    <View style={styles.inputContainerAuthFail}>
-                        <Image source={require("../../assets/icons/user_material.png")} resizeMode="contain" style={styles.icons}/>
-                        <TextInput 
-                            placeholder="username" 
-                            keyboardType="email-address" 
-                            underlineColorAndroid="transparent" 
-                            style={styles.input}
-                            onChangeText={(text) => {
-                                this.setState({username: text})
-                            }}
-                        />
+                <KeyboardAvoidingView style={styles.container} behavior="padding">
+                    <View>
+                        <View style={styles.topContainer}>
+                            <Image source={require("../../assets/logo/logo.png")} resizeMode="contain" style={styles.logo}/>
+                        </View>
+                        <View style={styles.centerContainer}>
+                            <View style={styles.inputContainerAuthFail}>
+                                <Image source={require("../../assets/icons/user_material.png")} resizeMode="contain" style={styles.icons}/>
+                                <TextInput 
+                                    placeholder="username" 
+                                    keyboardType="email-address" 
+                                    underlineColorAndroid="transparent" 
+                                    style={styles.input}
+                                    onChangeText={(text) => {
+                                        this.setState({username: text})
+                                    }}
+                                />
+                            </View>
+                            <View style={styles.inputContainerAuthFail}>
+                                <Image source={require("../../assets/icons/password.png")} resizeMode="contain" style={styles.icons} />
+                                <TextInput 
+                                    placeholder="password" 
+                                    keyboardType="numbers-and-punctuation" 
+                                    secureTextEntry={true} 
+                                    underlineColorAndroid="transparent" 
+                                    style={styles.input}
+                                    onChangeText={(text) => {
+                                        this.setState({ password: text })
+                                    }}
+                                />
+                            </View>
+                            <Text style={styles.textAuthFail}>username and password incorrect!</Text>
+                        </View>
+                        <View style={styles.bottomContainer}>
+                            <TouchableOpacity 
+                                style={styles.buttonContainer}
+                                onPress={() => {this.login(this.state.username, this.state.password)}}
+                            >
+                                <Text style={styles.text}>Login</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                    <View style={styles.inputContainerAuthFail}>
-                        <Image source={require("../../assets/icons/password.png")} resizeMode="contain" style={styles.icons} />
-                        <TextInput 
-                            placeholder="password" 
-                            keyboardType="numbers-and-punctuation" 
-                            secureTextEntry={true} 
-                            underlineColorAndroid="transparent" 
-                            style={styles.input}
-                            onChangeText={(text) => {
-                                this.setState({ password: text })
-                            }}
-                        />
-                    </View>
-                    <Text style={styles.textAuthFail}>username and password incorrect!</Text>
-                </View>
-                <View style={styles.bottomContainer}>
-                    <TouchableOpacity 
-                        style={styles.buttonContainer}
-                        onPress={() => {this.login(this.state.username, this.state.password)}}
-                    >
-                        <Text style={styles.text}>Login</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
+                </KeyboardAvoidingView>
             )
         }
 
         return (
-            <View style={styles.container}>
-                <View style={styles.topContainer}>
-                    <Image source={require("../../assets/logo/logo.png")} resizeMode="contain" style={styles.logo}/>
-                </View>
-                <View style={styles.centerContainer}>
-                    <View style={styles.inputContainer}>
-                        <Image source={require("../../assets/icons/user_material.png")} resizeMode="contain" style={styles.icons}/>
-                        <TextInput 
-                            placeholder="username" 
-                            keyboardType="email-address" 
-                            underlineColorAndroid="transparent" 
-                            style={styles.input}
-                            onChangeText={(text) => {
-                                this.setState({username: text})
-                            }}
-                        />
+            <KeyboardAvoidingView style={styles.container} behavior="padding">
+                <View>
+                    <View style={styles.topContainer}>
+                        <Image source={require("../../assets/logo/logo.png")} resizeMode="contain" style={styles.logo}/>
+                    </View> 
+                    <View style={styles.centerContainer}>
+                        <View style={styles.inputContainer}>
+                            <Image source={require("../../assets/icons/user_material.png")} resizeMode="contain" style={styles.icons}/>
+                            <TextInput 
+                                placeholder="username" 
+                                keyboardType="email-address" 
+                                underlineColorAndroid="transparent" 
+                                style={styles.input}
+                                onChangeText={(text) => {
+                                    this.setState({username: text})
+                                }}
+                            />
+                        </View>
+                        <View style={styles.inputContainer}>
+                            <Image source={require("../../assets/icons/password.png")} resizeMode="contain" style={styles.icons} />
+                            <TextInput 
+                                placeholder="password" 
+                                keyboardType="numbers-and-punctuation" 
+                                secureTextEntry={true} 
+                                underlineColorAndroid="transparent" 
+                                style={styles.input}
+                                onChangeText={(text) => {
+                                    this.setState({ password: text })
+                                }}
+                            />
+                        </View>
                     </View>
-                    <View style={styles.inputContainer}>
-                        <Image source={require("../../assets/icons/password.png")} resizeMode="contain" style={styles.icons} />
-                        <TextInput 
-                            placeholder="password" 
-                            keyboardType="numbers-and-punctuation" 
-                            secureTextEntry={true} 
-                            underlineColorAndroid="transparent" 
-                            style={styles.input}
-                            onChangeText={(text) => {
-                                this.setState({ password: text })
-                            }}
-                        />
+                    <View style={styles.bottomContainer}>
+                        <TouchableOpacity 
+                            style={styles.buttonContainer}
+                            onPress={() => {this.login(this.state.username, this.state.password)}}
+                        >
+                            <Text style={styles.text}>Login</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
-                <View style={styles.bottomContainer}>
-                    <TouchableOpacity 
-                        style={styles.buttonContainer}
-                        onPress={() => {this.login(this.state.username, this.state.password)}}
-                    >
-                        <Text style={styles.text}>Login</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
+            </KeyboardAvoidingView>
         )
     }
 }

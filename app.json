@@ -31,7 +31,8 @@
       "package": "com.smemetrics.nasr"
     },
     "notification": {
-      "icon": "./app/assets/logo/notification_icon.png"
+      "icon": "./app/assets/logo/final_notification_icon.png", 
+      "color": "#000000"
     }
   }
 }

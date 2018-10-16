@@ -624,6 +624,7 @@ const styles = StyleSheet.create({
         height: "100%",
         width: "10%",
         marginRight: 6,
+        paddingRight: 14, 
         backgroundColor: "#e1e8ee"
     },
     icon: {

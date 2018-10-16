@@ -9,6 +9,14 @@ import {
     Image
 } from 'react-native';
 import {
+    Menu,
+    MenuProvider,
+    MenuOptions,
+    MenuOption,
+    MenuTrigger,
+} from 'react-native-popup-menu';
+import HomeScreenMenu from '../Menu/HomeScreenMenu'
+import {
     Spinner
 } from 'native-base'
 import CONSTANTS from '../../constants/Constants'
@@ -30,7 +38,7 @@ export default class HomeScreen extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            isLoading: true
+            isLoading: true,
         };
         console.log(`\n\n------------------------------------------------------------------------HOME SCREEN------------------------------------------------------------------------`)
         this.handleBackButtonClick = this.handleBackButtonClick.bind(this)
@@ -39,6 +47,8 @@ export default class HomeScreen extends Component {
         this.exam = this.exam.bind(this);
         this.event = this.event.bind(this)
         this.notifications = this.notifications.bind(this)
+        this.renderHeader = this.renderHeader.bind(this)
+        this.onMenuOptionClicked = this.onMenuOptionClicked.bind(this)
     }    
 
     componentWillMount = async() => {
@@ -80,6 +90,27 @@ export default class HomeScreen extends Component {
         this.props.navigation.navigate("EventScreen")
     }
 
+    onMenuOptionClicked(item) {
+        switch(item) {
+            case 1:
+                this.logout()
+                break;
+        }
+    }
+
+    renderHeader() {
+        return(
+            <Menu style={{alignItems: "flex-end", justifyContent: "center"}} onSelect={value => this.onMenuOptionClicked(value)}>
+                <MenuTrigger children={<Image resizeMode="contain" source={require("../../assets/icons/menu.png")} style={{height: 32, width: 32, alignSelf: "flex-end"}}/>} />
+                <MenuOptions>
+                    <MenuOption value={1}>
+                        <Text style={{fontSize: 14, color: "#000", margin: 12,}}>Logout</Text>
+                    </MenuOption>
+                </MenuOptions>
+            </Menu>
+        )
+    }
+
     logout = async() => {
         console.log(`logout()----> removing data from AsyncStorage....`)
         this.setState({
@@ -111,10 +142,8 @@ export default class HomeScreen extends Component {
             )
         }
         return (
-            <View style={styles.container}>
-                <View style={styles.header}>
-                    
-                </View>
+            <MenuProvider style={styles.container}>
+                {this.renderHeader()}
                 <View style={styles.topContainer}>
                     <Image source={require("../../assets/logo/logo.png")} resizeMode="contain" style={styles.logo}/>
                 </View>
@@ -150,7 +179,7 @@ export default class HomeScreen extends Component {
                         </Col>
                     </Grid>
                 </View>
-            </View>
+            </MenuProvider>
         );
     }
 }
